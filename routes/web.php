@@ -31,6 +31,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::resource('users', UserController::class);
         Route::resource('pegawais', PegawaiController::class);
         Route::resource('tindakans', TindakanController::class);
+        Route::resource('pasiens', PasienController::class);
         Route::resource('kunjungans', KunjunganController::class);
 });
 });

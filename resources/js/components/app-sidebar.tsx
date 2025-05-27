@@ -73,9 +73,17 @@ export function AppSidebar() {
 
     const kunjunganNavItems: NavItem[] = [
         {
-            title: 'Menu Kunjungan',
+            title: 'Menu Transaksi Kunjungan',
             href: '/kunjungans',
             icon: User,
+        },
+    ];
+
+    const pasienNavItems: NavItem[] = [
+        {
+            title: 'Menu Pasien',
+            href: '/pasiens',
+            icon: User2,
         },
     ];
 
@@ -97,7 +105,7 @@ export function AppSidebar() {
                 <NavMain items={platformNavItems} groupLabel="" />
                 {userAccessLevel == 'admin' && (
                     <React.Fragment key="manage-nav">
-                        <NavMain items={[...kunjunganNavItems]} groupLabel="Menu" />
+                        <NavMain items={[...kunjunganNavItems, ...pasienNavItems]} groupLabel="Menu" />
                         <NavMain
                             items={[...productNavItems, ...wilayahNavItems, ...userNavItems, ...pegawaiNavItems, ...tindakanNavItems]}
                             groupLabel="Manage"

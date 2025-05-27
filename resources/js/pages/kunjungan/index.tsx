@@ -1,148 +1,107 @@
-import InputError from '@/components/input-error';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import IconButtonWithTooltip from '@/components/ui/custom-tooltip';
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
-import { Head, Link, useForm } from '@inertiajs/react';
-import { ArrowLeft, LoaderCircle } from 'lucide-react';
+import { Head, Link, usePage } from '@inertiajs/react';
+import { Pencil } from 'lucide-react';
+import { useEffect, useState } from 'react';
 
-export default function UserForm({ ...props }) {
-    const { user, isEdit } = props;
+const breadcrumbs: BreadcrumbItem[] = [
+    {
+        title: 'Manage',
+        href: '/kunjungan',
+    },
+    {
+        title: 'Manage Transaksi Kunjungan',
+        href: '/kunjungan',
+    },
+];
 
-    const breadcrumbs: BreadcrumbItem[] = [
-        {
-            title: `${isEdit ? 'Update' : 'Create'} User`,
-            href: route('users.index'),
-        },
-    ];
+interface Kunjungan {
+    id: number;
+    pasien: string;
+    tindakan: string;
+    product: string | null;
+    tanggal_kunjungan: string;
+    tagihan: number;
+    total_tagihan: number;
+}
 
-    const { data, setData, post, processing, errors, reset, put } = useForm({
-        name: user?.name || '',
-        email: user?.email || '',
-        password: '',
-        password_confirmation: '',
-        access: user?.access || '',
-        id: user?.id || '',
-    });
+export default function Index({ ...props }: { kunjungan: Kunjungan[] }) {
+    const { kunjungan } = props;
+    const { flash } = usePage<{ flash?: { success?: string; error?: String } }>().props;
+    const flashMessage = flash?.success || flash?.error;
+    const [showAlert, setShowAlert] = useState(flash?.success || flash?.error ? true : false);
 
-    const submit = (e: React.FormEvent<HTMLFormElement>) => {
-        e.preventDefault();
-
-        if (isEdit) {
-            if (user && user.id !== undefined) {
-                put(route('users.update', user.id), {
-                    onSuccess: () => console.log('Updated successfully'),
-                });
-            } else {
-                console.error('user or users.id is undefined');
-            }
-        } else {
-            post(route('users.store'), {
-                onSuccess: () => console.log('Created successfully'),
-            });
+    useEffect(() => {
+        if (flashMessage) {
+            const timer = setTimeout(() => setShowAlert(false), 5000);
+            return () => clearTimeout(timer);
         }
-    };
+    }, [flashMessage]);
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
-            <Head title={`${isEdit ? 'Update' : 'Create'} Wilayah`} />
-
+            <Head title="Data Kunjungan" />
             <div className="flex h-full flex-1 flex-col gap-4 rounded-xl p-4">
-                <div className="ml-auto">
-                    <Link
-                        as="button"
-                        className="item-center text-md flex w-fit cursor-pointer rounded-lg bg-indigo-500 px-4 py-2 text-white hover:opacity-90"
-                        href={route('users.index')}
+                {showAlert && flashMessage && (
+                    <Alert
+                        variant={'default'}
+                        className={`${flash?.success ? 'bg-green-700' : flash?.error ? 'bg-red-700' : ''} ml-auto max-w-md text-white`}
                     >
-                        <ArrowLeft className="me-2" /> Back
-                    </Link>
+                        <AlertTitle className="font-bold">{flash.success ? 'Success' : 'Error'}</AlertTitle>
+                        <AlertDescription className="text-white">{flashMessage}</AlertDescription>
+                    </Alert>
+                )}
+
+                <div className="overflow-hidden rounded-lg border bg-white shadow-sm">
+                    <table className="w-full table-auto">
+                        <thead>
+                            <tr className="bg-gray-800 text-white">
+                                <th className="border p-4">#</th>
+                                <th className="border p-4">Nama Pasien</th>
+                                <th className="border p-4">Tindakan</th>
+                                <th className="border p-4">Product</th>
+                                <th className="border p-4">Tanggal Kunjungan</th>
+                                <th className="border p-4">Tagihan</th>
+                                <th className="border p-4">Total Tagihan</th>
+                                <th className="border p-4">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {kunjungan.length > 0 ? (
+                                kunjungan.map((item, index) => (
+                                    <tr key={index}>
+                                        <td className="border px-4 py-2 text-center">{index + 1}</td>
+                                        <td className="border px-4 py-2 text-center">{item.pasien}</td>
+                                        <td className="border px-4 py-2 text-center">{item.tindakan}</td>
+                                        <td className="border px-4 py-2 text-center">{item.product || '-'}</td>
+                                        <td className="border px-4 py-2 text-center">{item.tanggal_kunjungan}</td>
+                                        <td className="border px-4 py-2 text-center">{item.tagihan}</td>
+                                        <td className="border px-4 py-2 text-center">{item.total_tagihan}</td>
+                                        <td className="border px-4 py-2 text-center">
+                                            <IconButtonWithTooltip tooltip="Edit Kunjungan">
+                                                <Link
+                                                    as="button"
+                                                    className="ms-2 cursor-pointer rounded-lg bg-green-500 p-2 text-white hover:opacity-90"
+                                                    href={route('kunjungans.edit', item.id)}
+                                                >
+                                                    <Pencil size={18} />
+                                                </Link>
+                                            </IconButtonWithTooltip>
+                                        </td>
+                                    </tr>
+                                ))
+                            ) : (
+                                <tr>
+                                    <td colSpan={8} className="text-md py-4 text-center font-bold">
+                                        No Kunjungan Found
+                                    </td>
+                                </tr>
+                            )}
+                        </tbody>
+                    </table>
                 </div>
-
-                <Card>
-                    <CardHeader>
-                        <CardTitle>{isEdit ? 'Update' : 'Create'} Wilayah</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        <form onSubmit={submit} autoComplete="off" className="flex flex-col gap-4">
-                            <div className="grid gap-6">
-                                <div className="grid gap-2">
-                                    <label htmlFor="name">Nama User</label>
-                                    <Input
-                                        id="name"
-                                        name="name"
-                                        value={data.name}
-                                        onChange={(e) => setData('name', e.target.value)}
-                                        type="text"
-                                        placeholder="User Name"
-                                        autoFocus
-                                    />
-                                    <InputError message={errors.name} />
-                                </div>
-
-                                <div className="grid gap-2">
-                                    <label htmlFor="email">Email</label>
-                                    <Input
-                                        id="email"
-                                        name="email"
-                                        value={data.email}
-                                        onChange={(e) => setData('email', e.target.value)}
-                                        type="email"
-                                        placeholder="Email@email.com"
-                                    />
-                                    <InputError message={errors.email} />
-                                </div>
-
-                                <div className="grid gap-2">
-                                    <label htmlFor="password">Password</label>
-                                    <Input
-                                        id="password"
-                                        name="password"
-                                        value={data.password}
-                                        onChange={(e) => setData('password', e.target.value)}
-                                        type="password"
-                                        placeholder="password"
-                                    />
-                                    <InputError message={errors.password} />
-                                </div>
-
-                                <div className="grid gap-2">
-                                    <label htmlFor="password_confirmation">Konfirmasi Password</label>
-                                    <Input
-                                        id="password_confirmation"
-                                        name="password_confirmation"
-                                        value={data.password_confirmation || ''}
-                                        onChange={(e) => setData('password_confirmation', e.target.value)}
-                                        type="password"
-                                        placeholder="Ulangi password"
-                                    />
-                                    <InputError message={errors.password_confirmation} />
-                                </div>
-
-                                <div className="grid gap-2">
-                                    <label htmlFor="access">Access</label>
-                                    <Select name="access" onValueChange={(value) => setData('access', value)} value={data.access}>
-                                        <SelectTrigger className="w-full" tabIndex={3}>
-                                            <SelectValue placeholder="Select a access" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            <SelectItem value="kasir">Kasir</SelectItem>
-                                            <SelectItem value="admin">Admin</SelectItem>
-                                            <SelectItem value="dokter">Dokter</SelectItem>
-                                            <SelectItem value="petugas">Petugas</SelectItem>
-                                        </SelectContent>
-                                    </Select>
-                                </div>
-
-                                <Button type="submit" className="mt-4 w-fit cursor-pointer">
-                                    {processing && <LoaderCircle className="me-2 h-4 w-4 animate-spin" />}
-                                    {processing ? (isEdit ? 'Updating...' : 'Creating...') : isEdit ? 'Update User' : 'Create User'}
-                                </Button>
-                            </div>
-                        </form>
-                    </CardContent>
-                </Card>
             </div>
         </AppLayout>
     );

@@ -7,27 +7,17 @@ use Illuminate\Database\Eloquent\Model;
 class Pasien extends Model
 {
     protected $table = 'pasiens';
-    
+
     protected $fillable = [
         'nama',
-        'tanggal_lahir',
-        'jenis_kelamin',
+        'nik',
         'telepon',
-        'alamat',
-        'wilayah_id'
+        'jenis_kunjungan',
+        'pegawai_id',
     ];
 
-    protected $casts = [
-        'tanggal_lahir' => 'date'
-    ];
-
-    public function wilayah()
+    public function pegawai()
     {
-        return $this->belongsTo(Wilayah::class);
-    }
-
-    public function kunjungans()
-    {
-        return $this->hasMany(Kunjungan::class);
-    }
+        return $this->belongsTo(Pegawai::class, 'pegawai_id');
+    }   
 }
