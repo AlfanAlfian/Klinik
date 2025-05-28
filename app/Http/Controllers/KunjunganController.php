@@ -67,7 +67,9 @@ class KunjunganController extends Controller
     {
         $kunjungan = KunjunganPasien::with(['pasien', 'products'])->findOrFail($id);
         $tindakans = Tindakan::select('id', 'nama_tindakan', 'tarif')->get();
-        $products = Product::select('id', 'name', 'price')->get();
+        $products = Product::select('id', 'name', 'price', 'stock')
+                      ->where('stock', '>', 0)
+                      ->get();
 
         return inertia('kunjungan/kunjungan-form', [
             'kunjungan' => [
@@ -93,14 +95,35 @@ class KunjunganController extends Controller
         try {
             $validated = $request->validated(); 
             
+            DB::beginTransaction();
+
+            $kunjungan = KunjunganPasien::with('products')->findOrFail($id);
+            $oldProductIds = $kunjungan->products->pluck('id')->toArray();
+            $newProductIds = $validated['product_ids'];
+
+            $removedProducts = array_diff($oldProductIds, $newProductIds);
+            foreach($removedProducts as $productId) {
+                Product::where('id', $productId)->increment('stock', 1);
+            }
+
+            $addedProducts = array_diff($newProductIds, $oldProductIds);
+            foreach($addedProducts as $productId) {
+                $product = Product::find($productId);
+                if ($product && $product->stock > 0) {
+                    $product->decrement('stock', 1);
+                    
+                    $product->stockLogs()->create([
+                        'type' => 'out',
+                        'quantity' => 1,
+                    ]);
+                }
+            }
+
             $productsTotal = Product::whereIn('id', $validated['product_ids'])
                 ->sum('price');
             
             $total_tagihan = floatval($productsTotal) + floatval($validated['tarif_tindakan']);
             
-            DB::beginTransaction();
-
-            $kunjungan = KunjunganPasien::findOrFail($id);
             $kunjungan->update([
                 'tindakan' => $validated['tindakan'],
                 'tarif_tindakan' => $validated['tarif_tindakan'],

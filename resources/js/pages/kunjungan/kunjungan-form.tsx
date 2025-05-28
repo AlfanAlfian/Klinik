@@ -34,6 +34,7 @@ interface Props {
         id: number;
         name: string;
         price: number;
+        stock: number;
     }[];
     isEdit?: boolean;
 }
@@ -202,8 +203,14 @@ export default function KunjunganForm({ kunjungan, tindakanOption = [], productO
                                                     <CommandEmpty>No product found.</CommandEmpty>
                                                     <CommandGroup>
                                                         {productOption.map((product) => (
-                                                            <CommandItem key={product.id} value={String(product.id)} onSelect={handleProductSelect}>
+                                                            <CommandItem
+                                                                key={product.id}
+                                                                value={String(product.id)}
+                                                                onSelect={handleProductSelect}
+                                                                disabled={product.stock === 0}
+                                                            >
                                                                 {product.name}
+                                                                <span className="ml-2 text-sm text-gray-500">(Stok: {product.stock})</span>
                                                                 <Check
                                                                     className={cn(
                                                                         'ml-auto h-4 w-4',

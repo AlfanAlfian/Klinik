@@ -58,7 +58,7 @@ export default function Index({ kunjungan, userRole }: Props) {
     };
 
     const EditButton = ({ kunjunganId, status }: { kunjunganId: number; status: string }) => {
-        if (status === 'pending' || (userRole !== 'admin' && userRole !== 'dokter')) return null;
+        if (status !== 'pending' || userRole !== 'dokter') return null;
 
         return (
             <IconButtonWithTooltip tooltip="Edit Kunjungan">
@@ -154,10 +154,14 @@ export default function Index({ kunjungan, userRole }: Props) {
                                             }).format(item.total_tagihan)}
                                         </td>
                                         <td className="border px-4 py-2 text-center">
-                                            <div className="flex items-center justify-center gap-2">
-                                                <PaymentButton kunjunganId={item.id} status={item.tagihan} />
-                                                <EditButton kunjunganId={item.id} status={item.tagihan} />
-                                            </div>
+                                            {item.tagihan === 'pending' ? (
+                                                <div className="flex items-center justify-center gap-2">
+                                                    <PaymentButton kunjunganId={item.id} status={item.tagihan} />
+                                                    <EditButton kunjunganId={item.id} status={item.tagihan} />
+                                                </div>
+                                            ) : (
+                                                <span>-</span>
+                                            )}
                                         </td>
                                     </tr>
                                 ))
