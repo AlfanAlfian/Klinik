@@ -22,11 +22,19 @@ class KunjunganRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'pasien_id' => 'required|exists:pasiens,id',
             'tindakan' => 'required|string',
-            'tarif_tindakan' => 'required|numeric|min:0',
-            'product_id' => 'required|exists:products,id',
-            'tagihan' => 'required|string',
+            'tarif_tindakan' => 'required|numeric',
+            'product_ids' => 'required|array|min:1', 
+            'product_ids.*' => 'exists:products,id',
+            'total_tagihan' => 'numeric'
+        ];
+    }
+
+    public function messages()
+    {
+        return [
+            'product_ids.required' => 'Silahkan pilih minimal 1 product',
+            'product_ids.min' => 'Silahkan pilih minimal 1 product',
         ];
     }
 }

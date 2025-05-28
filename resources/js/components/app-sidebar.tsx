@@ -3,7 +3,6 @@ import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, Sid
 import { type NavItem } from '@/types';
 import { Link, usePage } from '@inertiajs/react';
 import { Archive, LayoutGrid, MapPin, Notebook, User, User2 } from 'lucide-react';
-import React from 'react';
 import AppLogo from './app-logo';
 
 interface User {
@@ -21,7 +20,7 @@ interface PageProps {
 
 export function AppSidebar() {
     const { auth } = usePage().props as unknown as PageProps;
-    const userAccessLevel = auth.user?.access || 'kasir';
+    const userAccessLevel = auth.user?.access || '';
 
     const platformNavItems: NavItem[] = [
         {
@@ -31,39 +30,27 @@ export function AppSidebar() {
         },
     ];
 
-    const productNavItems: NavItem[] = [
+    const managementNavItems: NavItem[] = [
         {
             title: 'Manage Products',
             href: '/products',
             icon: Archive,
         },
-    ];
-
-    const wilayahNavItems: NavItem[] = [
         {
             title: 'Manage Wilayah',
             href: '/wilayahs',
             icon: MapPin,
         },
-    ];
-
-    const userNavItems: NavItem[] = [
         {
-            title: 'Manage User',
+            title: 'Manage Users',
             href: '/users',
             icon: User2,
         },
-    ];
-
-    const pegawaiNavItems: NavItem[] = [
         {
             title: 'Manage Pegawai',
             href: '/pegawais',
             icon: User,
         },
-    ];
-
-    const tindakanNavItems: NavItem[] = [
         {
             title: 'Manage Tindakan',
             href: '/tindakans',
@@ -73,7 +60,7 @@ export function AppSidebar() {
 
     const kunjunganNavItems: NavItem[] = [
         {
-            title: 'Menu Transaksi Kunjungan',
+            title: 'Menu Kunjungan',
             href: '/kunjungans',
             icon: User,
         },
@@ -103,15 +90,14 @@ export function AppSidebar() {
 
             <SidebarContent>
                 <NavMain items={platformNavItems} groupLabel="" />
-                {userAccessLevel == 'admin' && (
-                    <React.Fragment key="manage-nav">
-                        <NavMain items={[...kunjunganNavItems, ...pasienNavItems]} groupLabel="Menu" />
-                        <NavMain
-                            items={[...productNavItems, ...wilayahNavItems, ...userNavItems, ...pegawaiNavItems, ...tindakanNavItems]}
-                            groupLabel="Manage"
-                        />
-                    </React.Fragment>
-                )}
+
+                {userAccessLevel === 'admin' && <NavMain items={managementNavItems} groupLabel="Management" />}
+
+                {userAccessLevel === 'kasir' && <NavMain items={kunjunganNavItems} groupLabel="Transaksi" />}
+
+                {userAccessLevel === 'dokter' && <NavMain items={kunjunganNavItems} groupLabel="Pemeriksaan" />}
+
+                {userAccessLevel === 'petugas' && <NavMain items={pasienNavItems} groupLabel="Pendaftaran" />}
             </SidebarContent>
 
             <SidebarFooter></SidebarFooter>

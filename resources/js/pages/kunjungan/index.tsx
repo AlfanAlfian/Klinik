@@ -21,17 +21,70 @@ interface Kunjungan {
     id: number;
     pasien: string;
     tindakan: string;
-    product: string | null;
+    products: string;
     tanggal_kunjungan: string;
-    tagihan: number;
+    tagihan: 'pending' | 'paid';
     total_tagihan: number;
 }
 
-export default function Index({ ...props }: { kunjungan: Kunjungan[] }) {
-    const { kunjungan } = props;
+interface Props {
+    kunjungan: Kunjungan[];
+    userRole?: string;
+}
+
+export default function Index({ kunjungan, userRole }: Props) {
     const { flash } = usePage<{ flash?: { success?: string; error?: String } }>().props;
     const flashMessage = flash?.success || flash?.error;
     const [showAlert, setShowAlert] = useState(flash?.success || flash?.error ? true : false);
+
+    const PaymentButton = ({ kunjunganId, status }: { kunjunganId: number; status: string }) => {
+        if (status !== 'pending' || userRole !== 'kasir') return null;
+
+        return (
+            <Link
+                as="button"
+                method="put"
+                href={route('kunjungans.payment', kunjunganId)}
+                className="rounded-full bg-blue-500 px-3 py-1 text-sm font-medium text-white hover:bg-blue-600"
+                onClick={(e) => {
+                    if (!confirm('Are you sure you want to mark this as paid?')) {
+                        e.preventDefault();
+                    }
+                }}
+            >
+                Mark as Paid
+            </Link>
+        );
+    };
+
+    const EditButton = ({ kunjunganId, status }: { kunjunganId: number; status: string }) => {
+        if (status === 'pending' || (userRole !== 'admin' && userRole !== 'dokter')) return null;
+
+        return (
+            <IconButtonWithTooltip tooltip="Edit Kunjungan">
+                <Link
+                    as="button"
+                    className="ms-2 cursor-pointer rounded-lg bg-green-500 p-2 text-white hover:opacity-90"
+                    href={route('kunjungans.edit', kunjunganId)}
+                >
+                    <Pencil size={18} />
+                </Link>
+            </IconButtonWithTooltip>
+        );
+    };
+
+    const PaymentStatus = ({ status }: { status: string }) => {
+        const isPending = status === 'pending';
+        return (
+            <span
+                className={`inline-flex rounded-full px-2 py-1 text-xs font-semibold ${
+                    isPending ? 'bg-yellow-100 text-yellow-800' : 'bg-green-100 text-green-800'
+                }`}
+            >
+                {status.toUpperCase()}
+            </span>
+        );
+    };
 
     useEffect(() => {
         if (flashMessage) {
@@ -75,20 +128,36 @@ export default function Index({ ...props }: { kunjungan: Kunjungan[] }) {
                                         <td className="border px-4 py-2 text-center">{index + 1}</td>
                                         <td className="border px-4 py-2 text-center">{item.pasien}</td>
                                         <td className="border px-4 py-2 text-center">{item.tindakan}</td>
-                                        <td className="border px-4 py-2 text-center">{item.product || '-'}</td>
-                                        <td className="border px-4 py-2 text-center">{item.tanggal_kunjungan}</td>
-                                        <td className="border px-4 py-2 text-center">{item.tagihan}</td>
-                                        <td className="border px-4 py-2 text-center">{item.total_tagihan}</td>
                                         <td className="border px-4 py-2 text-center">
-                                            <IconButtonWithTooltip tooltip="Edit Kunjungan">
-                                                <Link
-                                                    as="button"
-                                                    className="ms-2 cursor-pointer rounded-lg bg-green-500 p-2 text-white hover:opacity-90"
-                                                    href={route('kunjungans.edit', item.id)}
-                                                >
-                                                    <Pencil size={18} />
-                                                </Link>
-                                            </IconButtonWithTooltip>
+                                            {item.products ? (
+                                                <div className="flex flex-col gap-1">
+                                                    {item.products.split(', ').map((product, idx) => (
+                                                        <span key={idx} className="inline-block rounded-full bg-gray-100 px-2 py-1 text-sm">
+                                                            {product}
+                                                        </span>
+                                                    ))}
+                                                </div>
+                                            ) : (
+                                                '-'
+                                            )}
+                                        </td>
+                                        <td className="border px-4 py-2 text-center">{item.tanggal_kunjungan}</td>
+                                        <td className="border px-4 py-2 text-center">
+                                            <div className="flex flex-col items-center gap-2">
+                                                <PaymentStatus status={item.tagihan} />
+                                            </div>
+                                        </td>
+                                        <td className="border px-4 py-2 text-center">
+                                            {new Intl.NumberFormat('id-ID', {
+                                                style: 'currency',
+                                                currency: 'IDR',
+                                            }).format(item.total_tagihan)}
+                                        </td>
+                                        <td className="border px-4 py-2 text-center">
+                                            <div className="flex items-center justify-center gap-2">
+                                                <PaymentButton kunjunganId={item.id} status={item.tagihan} />
+                                                <EditButton kunjunganId={item.id} status={item.tagihan} />
+                                            </div>
                                         </td>
                                     </tr>
                                 ))

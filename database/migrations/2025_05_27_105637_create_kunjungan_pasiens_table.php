@@ -16,7 +16,6 @@ return new class extends Migration
             $table->foreignId('pasien_id')->constrained()->onDelete('cascade');
             $table->string('tindakan')->nullable();
             $table->decimal('tarif_tindakan', 10, 2)->default(0.00);
-            $table->foreignId('product_id')->nullable()->constrained('products')->onDelete('cascade');
             $table->timestamp('tanggal_kunjungan')->useCurrent();
             $table->string('tagihan')->nullable()->default('pending');
             $table->decimal('total_tagihan', 10, 2)->default(0.00);
